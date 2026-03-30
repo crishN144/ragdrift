@@ -42,3 +42,4 @@ uv.lock
 preview.html
 README.backup.md
 *.tape
+.claude/
