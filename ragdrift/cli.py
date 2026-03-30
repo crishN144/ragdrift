@@ -12,6 +12,7 @@ import json
 import shutil
 import sys
 import tempfile
+import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -132,7 +133,7 @@ def cmd_init(args: argparse.Namespace) -> None:
             "chunks": chunks,
         }
         print(f"  ✓ {doc_path.name}: {len(chunks)} chunks, {len(extraction['headings'])} headings", flush=True)
-        import time; time.sleep(0.08)
+        time.sleep(0.08)
 
     snapshot_store.save_snapshot(corpus, snapshot_id, doc_snapshots, extractions)
     conn.close()
@@ -330,7 +331,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
             "fingerprints": fingerprints,
             "drift_history": drift_history,
         }
-        print(f"\033[2J\033[H", end="", flush=True)
+        print("\033[2J\033[H", end="", flush=True)
         print(f"{C.MAUVE}  ┌─────────────────────────────────────────────────────────┐{C.RESET}")
         print(f"{C.MAUVE}  │  LLM DIAGNOSIS  ·  Claude Haiku                         │{C.RESET}")
         print(f"{C.MAUVE}  └─────────────────────────────────────────────────────────┘{C.RESET}")
