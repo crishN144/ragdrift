@@ -6,7 +6,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2601.14479-b31b1b.svg)](https://arxiv.org/abs/2601.14479)
 
-RAG systems don't crash, they rot. A changed PDF template, a parser upgrade, a stale index rebuild. Retrieval accuracy drops from 80% to 25% and nobody notices for weeks. ragdrift catches this in hours.
+ragdrift detected a 26.2pp accuracy drop across 5 documents in 4.3 seconds. Your users would have found out in 3 weeks.
+
+RAG systems don't crash, they rot. A changed PDF template, a parser upgrade, a stale index rebuild — and retrieval accuracy quietly falls off a cliff. ragdrift catches it before re-ingestion.
 
 | Metric | Without ragdrift | With ragdrift |
 |--------|-----------------|---------------|
