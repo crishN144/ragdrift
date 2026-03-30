@@ -1,8 +1,8 @@
 <img src="./assets/banner.svg" alt="ragdrift" width="100%" />
 
 [![CI](https://github.com/crishN144/ragdrift/actions/workflows/ci.yml/badge.svg)](https://github.com/crishN144/ragdrift/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/ragdrift)](https://pypi.org/project/ragdrift/)
-[![Python](https://img.shields.io/pypi/pyversions/ragdrift)](https://pypi.org/project/ragdrift/)
+[![PyPI](https://img.shields.io/badge/pypi-v0.1.0-blue)](https://pypi.org/project/ragdrift/)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/ragdrift/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2601.14479-b31b1b.svg)](https://arxiv.org/abs/2601.14479)
 
