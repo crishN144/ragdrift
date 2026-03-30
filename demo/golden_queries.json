@@ -1,0 +1,55 @@
+[
+  {
+    "query": "What are the key regulatory bodies for financial compliance including SEC FINRA and FCA?",
+    "expected_doc_ids": ["03_regulatory_compliance.md"],
+    "domain": "finance"
+  },
+  {
+    "query": "How does the CYP450 enzyme system affect drug metabolism and what are common inhibitors?",
+    "expected_doc_ids": ["08_drug_interactions.md"],
+    "domain": "healthcare"
+  },
+  {
+    "query": "What is the role of consideration and why is past consideration generally insufficient in contract law?",
+    "expected_doc_ids": ["11_contract_law.md"],
+    "domain": "legal",
+    "_note": "Targets deleted Consideration section in corpus_v2"
+  },
+  {
+    "query": "What defenses such as duress unconscionability and statute of frauds can render a contract unenforceable?",
+    "expected_doc_ids": ["11_contract_law.md"],
+    "domain": "legal",
+    "_note": "Targets deleted Defenses to Enforcement section in corpus_v2"
+  },
+  {
+    "query": "How do microservices communicate synchronously and asynchronously in cloud-native architecture?",
+    "expected_doc_ids": ["16_cloud_architecture.md"],
+    "domain": "tech"
+  },
+  {
+    "query": "What data quality dimensions including completeness uniqueness and timeliness should data pipelines monitor?",
+    "expected_doc_ids": ["18_data_pipelines.md"],
+    "domain": "tech",
+    "_note": "Targets table content that is broken in corpus_v2"
+  },
+  {
+    "query": "What is the difference between mediation and arbitration for dispute resolution?",
+    "expected_doc_ids": ["15_dispute_resolution.md"],
+    "domain": "legal"
+  },
+  {
+    "query": "How should investment portfolio risk be assessed and diversified?",
+    "expected_doc_ids": ["01_investment_risk.md", "04_portfolio_management.txt"],
+    "domain": "finance"
+  },
+  {
+    "query": "What are the phases of clinical trials and their protocols?",
+    "expected_doc_ids": ["06_clinical_trials.md"],
+    "domain": "healthcare"
+  },
+  {
+    "query": "What are GDPR requirements for data privacy protection?",
+    "expected_doc_ids": ["13_data_privacy.md"],
+    "domain": "legal"
+  }
+]

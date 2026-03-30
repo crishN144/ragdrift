@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ragdrift"
+version = "0.1.0"
+description = "Silent regression detector for RAG pipelines"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Crish Nagarkar" },
+]
+keywords = ["rag", "drift", "regression", "nlp", "retrieval"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "rank-bm25>=0.2.2",
+]
+
+[project.optional-dependencies]
+vector = [
+    "qdrant-client>=1.9.0",
+    "sentence-transformers>=2.6.0",
+    "numpy>=1.26.0",
+]
+api = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+]
+ui = [
+    "streamlit>=1.33.0",
+    "plotly>=5.20.0",
+]
+explain = [
+    "anthropic>=0.25.0",
+]
+agent = [
+    "langgraph>=0.2.0",
+]
+all = [
+    "ragdrift[vector,api,ui,explain,agent]",
+]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+ragdrift = "ragdrift.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/crishN144/ragdrift"
+Repository = "https://github.com/crishN144/ragdrift"
+Issues = "https://github.com/crishN144/ragdrift/issues"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+include = ["ragdrift*", "demo*"]

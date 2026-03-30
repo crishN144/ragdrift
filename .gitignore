@@ -1,0 +1,44 @@
+# ragdrift data directories
+data/
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ragdrift runtime data (corpus scan state)
+**/.ragdrift/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# uv
+uv.lock
+preview.html
+README.backup.md
+*.tape

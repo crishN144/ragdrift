@@ -1,0 +1,35 @@
+Telemedicine Implementation Guidelines
+
+Overview
+
+Telemedicine enables the delivery of healthcare services remotely through telecommunications technology. When implemented effectively, telemedicine expands access to care for underserved populations, reduces travel burden for patients with chronic conditions, and enables more efficient utilization of specialist resources.
+
+Technology Infrastructure Requirements
+
+A reliable telemedicine platform requires several core components. Video conferencing capability must support high-definition audio and video with minimal latency, targeting less than 150 milliseconds round-trip time for a natural conversational experience. The platform must function across devices including desktop computers, tablets, and smartphones to accommodate varying patient technology access.
+
+Network bandwidth requirements depend on the modality. Standard video consultations require a minimum of 1.5 megabits per second for both upload and download. Store-and-forward telemedicine, where images or data are transmitted asynchronously for later review, has lower bandwidth demands but requires secure file transfer mechanisms.
+
+Interoperability with existing electronic health record systems is essential. The platform should support HL7 FHIR standards for exchanging patient data and integrate with scheduling, billing, and prescription management workflows. Single sign-on authentication reduces friction for clinicians who must navigate multiple systems during a patient encounter.
+
+Clinical Workflow Design
+
+Effective telemedicine workflows differ from in-person visit patterns and must be designed intentionally. Pre-visit preparation should include verifying the patient's identity, confirming their physical location for licensing compliance, and ensuring their technology is functioning properly through an automated system check.
+
+During the encounter, clinicians should follow a structured approach that compensates for the limitations of remote examination. Asking patients to perform guided self-examination maneuvers, use connected medical devices such as digital stethoscopes or otoscopes, and position their camera to show relevant physical findings improves diagnostic accuracy.
+
+Documentation standards for telemedicine visits should specify the modality used, the patient's location, any technical difficulties encountered, and whether the clinical assessment was limited by the remote format. If an in-person follow-up is warranted, this should be explicitly stated in the visit note.
+
+Regulatory and Licensing Considerations
+
+Telemedicine practice is subject to medical licensing requirements in the jurisdiction where the patient is physically located at the time of the encounter. Most states require physicians to hold a license in the patient's state, though interstate compacts such as the Interstate Medical Licensure Compact streamline multi-state licensing for qualifying physicians.
+
+Prescribing regulations vary by state and by controlled substance schedule. The Ryan Haight Act requires at least one in-person evaluation before prescribing controlled substances via telemedicine, though pandemic-era waivers relaxed this requirement for certain situations. Clinicians must verify current regulations in each state where they practice.
+
+Reimbursement and Billing
+
+Reimbursement parity laws in many states require private insurers to reimburse telemedicine services at the same rate as equivalent in-person services. Medicare covers telehealth visits under specific conditions including approved originating sites and eligible provider types. The use of appropriate CPT codes and place-of-service codes is critical for accurate billing and claim adjudication.
+
+Quality Measurement
+
+Telemedicine programs should track key quality indicators including patient satisfaction scores, no-show rates compared to in-person visits, technical failure rates, time from appointment request to completed visit, and clinical outcome measures specific to the conditions being managed. Regular review of these metrics supports continuous improvement and justifies continued investment in telemedicine infrastructure.

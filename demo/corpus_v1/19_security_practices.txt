@@ -1,0 +1,35 @@
+Application Security Best Practices
+
+Overview
+
+Application security encompasses the measures taken to protect software applications from threats throughout their lifecycle, from design and development through deployment and ongoing operation. A proactive security posture reduces the attack surface, minimizes vulnerability exposure, and limits the impact of successful attacks.
+
+Secure Development Lifecycle
+
+Security should be integrated into every phase of the software development lifecycle rather than applied as an afterthought before release. Threat modeling during the design phase identifies potential attack vectors and informs architectural decisions. The STRIDE framework categorizes threats as Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, and Elevation of Privilege, providing a structured approach to identifying risks.
+
+Static Application Security Testing tools analyze source code without executing it, identifying vulnerabilities such as SQL injection, cross-site scripting, buffer overflows, and insecure deserialization patterns. These tools should be integrated into the continuous integration pipeline so that every code commit is automatically scanned and builds fail when critical vulnerabilities are detected.
+
+Dynamic Application Security Testing tools probe running applications by sending crafted requests and analyzing responses for signs of vulnerability. DAST complements SAST by detecting runtime issues such as misconfigured security headers, authentication bypass flaws, and server-side request forgery vulnerabilities that may not be apparent from source code analysis alone.
+
+Software Composition Analysis tools inventory open-source dependencies and flag components with known vulnerabilities cataloged in databases such as the National Vulnerability Database. Given that modern applications derive 70 to 90 percent of their code from open-source libraries, SCA is an essential component of the security toolchain.
+
+Authentication and Authorization
+
+Authentication verifies that a user or system is who they claim to be. Multi-factor authentication combining something the user knows, something they have, and something they are significantly reduces the risk of credential-based attacks. OAuth 2.0 and OpenID Connect provide standardized frameworks for delegated authorization and federated identity.
+
+Authorization determines what actions an authenticated entity is permitted to perform. Role-based access control assigns permissions to roles, and roles are assigned to users. Attribute-based access control provides finer-grained control by evaluating policies against attributes of the user, resource, action, and environment context.
+
+The principle of least privilege dictates that entities should receive only the minimum permissions necessary to perform their intended function. Regular access reviews and automated deprovisioning when employees change roles or leave the organization prevent privilege accumulation.
+
+Data Protection
+
+Data at rest should be encrypted using AES-256 or equivalent algorithms with keys managed through a dedicated key management service. Data in transit must be protected with TLS 1.2 or higher, with deprecated protocols and weak cipher suites disabled. Sensitive data such as passwords must be hashed using adaptive algorithms like bcrypt or Argon2 that are resistant to brute-force attacks.
+
+Input validation is the first line of defense against injection attacks. All user input should be treated as untrusted and validated against expected formats, lengths, and character sets. Parameterized queries prevent SQL injection by separating data from code in database operations.
+
+Incident Response
+
+An incident response plan defines procedures for detecting, containing, eradicating, and recovering from security incidents. The plan should designate roles and responsibilities, establish communication protocols, and include playbooks for common incident types. Regular tabletop exercises and simulated incidents test the team's readiness and identify gaps in the response process.
+
+Security logging must capture authentication events, authorization decisions, data access patterns, and configuration changes with sufficient detail to support forensic investigation. Logs should be aggregated in a centralized security information and event management system with automated alerting rules for suspicious patterns.

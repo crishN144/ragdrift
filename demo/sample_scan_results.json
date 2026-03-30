@@ -1,0 +1,73 @@
+{
+  "corpus_id": "/demo/corpus",
+  "scan_id": "demo-001",
+  "timestamp": "2026-03-28T23:00:00+00:00",
+  "docs_sampled": 20,
+  "docs_drifted": 5,
+  "overall_severity": "critical",
+  "retrieval_accuracy_before": 1.0,
+  "retrieval_accuracy_after": 0.87,
+  "drift_events": [
+    {
+      "doc_id": "16_cloud_architecture.md",
+      "severity": "critical",
+      "chunk_count_before": 11,
+      "chunk_count_after": 18,
+      "chunk_delta_pct": 63.6,
+      "heading_changes": ["added: ## Resilience Patterns: Operational Best Practices", "added: ## Resilience Patterns: Advanced Considerations"],
+      "lexical_anomalies": ["token_shift=0.4264"],
+      "semantic_drift_score": 0.0,
+      "recommended_action": "re_ingest",
+      "retrieval_impact": true
+    },
+    {
+      "doc_id": "11_contract_law.md",
+      "severity": "high",
+      "chunk_count_before": 11,
+      "chunk_count_after": 8,
+      "chunk_delta_pct": -27.3,
+      "heading_changes": ["removed: ## Defenses to Enforcement", "removed: ### Consideration"],
+      "lexical_anomalies": ["token_shift=0.3149"],
+      "semantic_drift_score": 0.0,
+      "recommended_action": "re_ingest",
+      "retrieval_impact": true
+    },
+    {
+      "doc_id": "08_drug_interactions.md",
+      "severity": "high",
+      "chunk_count_before": 12,
+      "chunk_count_after": 13,
+      "chunk_delta_pct": 8.3,
+      "heading_changes": ["removed: ## Pharmacokinetic Interactions", "removed: ## Pharmacodynamic Interactions", "added: ## Pharmacokinetic\u200b Interactions"],
+      "lexical_anomalies": ["misaligned_columns: 2 table(s) have inconsistent pipe counts"],
+      "semantic_drift_score": 0.0,
+      "recommended_action": "re_ingest",
+      "retrieval_impact": true
+    },
+    {
+      "doc_id": "03_regulatory_compliance.md",
+      "severity": "high",
+      "chunk_count_before": 12,
+      "chunk_count_after": 12,
+      "chunk_delta_pct": 0.0,
+      "heading_changes": ["removed: ## Key Regulatory Bodies", "removed: ## Anti-Money Laundering (AML) Requirements", "removed: ## Know Your Customer (KYC) Framework"],
+      "lexical_anomalies": ["misaligned_columns: 1 table(s) have inconsistent pipe counts"],
+      "semantic_drift_score": 0.0,
+      "recommended_action": "re_ingest",
+      "retrieval_impact": true
+    },
+    {
+      "doc_id": "18_data_pipelines.md",
+      "severity": "medium",
+      "chunk_count_before": 12,
+      "chunk_count_after": 12,
+      "chunk_delta_pct": 0.0,
+      "heading_changes": [],
+      "lexical_anomalies": ["misaligned_columns: 4 table(s) have inconsistent pipe counts", "table_rows: 16 \u2192 15"],
+      "semantic_drift_score": 0.0,
+      "recommended_action": "monitor",
+      "retrieval_impact": false
+    }
+  ],
+  "diagnosis": null
+}

@@ -1,0 +1,33 @@
+RESTful API Design Principles
+
+Introduction
+
+A well-designed API serves as the contract between service providers and consumers, enabling reliable integration across organizational and technical boundaries. RESTful APIs built on HTTP leverage familiar protocols, tooling, and conventions to create interfaces that are intuitive, consistent, and maintainable over time.
+
+Resource-Oriented Design
+
+REST models the world as a collection of resources, each identified by a unique URI. Resources represent nouns rather than verbs. A customer resource might be identified as /customers/12345 while a collection of orders belonging to that customer would be /customers/12345/orders. This hierarchical structure communicates relationships between resources through the URI path.
+
+HTTP methods map to standard operations on resources. GET retrieves a resource or collection without side effects. POST creates a new resource within a collection. PUT replaces a resource entirely with the provided representation. PATCH applies a partial update to specific fields of a resource. DELETE removes a resource. Using methods consistently across all resources establishes predictable behavior that reduces the learning curve for API consumers.
+
+Response status codes communicate the outcome of each request. The 200 range indicates success, with 200 for successful retrieval, 201 for successful creation, and 204 for successful operations with no content to return. The 400 range indicates client errors, with 400 for malformed requests, 401 for missing authentication, 403 for insufficient authorization, 404 for resources not found, and 422 for valid syntax but unprocessable content. The 500 range indicates server errors that the client cannot resolve.
+
+Pagination and Filtering
+
+Collections that may contain large numbers of items must support pagination. Cursor-based pagination uses an opaque token pointing to the last item in the current page, providing stable results even when items are added or removed between requests. Offset-based pagination using page and per_page parameters is simpler to implement but can produce inconsistent results in dynamic collections.
+
+Filtering should use query parameters with clear naming conventions. For example, /orders?status=shipped&created_after=2025-01-01 filters orders by status and creation date. Range filters, multi-value filters using comma-separated values, and full-text search parameters should follow consistent patterns across all collection endpoints.
+
+Versioning Strategy
+
+API versioning protects existing consumers from breaking changes while allowing the API to evolve. URI versioning embeds the version in the path, such as /v1/customers, making the version explicit and easy to route. Header versioning uses a custom request header like Accept-Version to specify the desired version, keeping URIs clean but adding complexity to routing and documentation.
+
+Regardless of the versioning mechanism, a deprecation policy should provide consumers with adequate notice before older versions are retired. A minimum of 12 months notice is standard practice for production APIs with external consumers.
+
+Error Handling
+
+Error responses should be machine-readable and human-readable simultaneously. A consistent error response body should include a unique error code for programmatic handling, a human-readable message describing the problem, a details array listing specific validation failures or contributing factors, and a documentation URL pointing to relevant troubleshooting guidance.
+
+Authentication and Rate Limiting
+
+OAuth 2.0 with bearer tokens is the standard authentication mechanism for production APIs. API keys may be appropriate for server-to-server integrations with trusted partners. Rate limiting protects the API from abuse and ensures fair access. Rate limit headers including X-RateLimit-Limit, X-RateLimit-Remaining, and X-RateLimit-Reset communicate the current rate limit status to consumers, enabling them to implement appropriate backoff strategies.

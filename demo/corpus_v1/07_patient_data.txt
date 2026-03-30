@@ -1,0 +1,33 @@
+Patient Data Privacy Requirements
+
+Introduction
+
+The protection of patient health information is both a legal obligation and an ethical imperative for healthcare organizations. As medical records transition from paper-based systems to electronic formats, the attack surface for data breaches has expanded significantly, making robust privacy controls essential.
+
+HIPAA Privacy and Security Rules
+
+The Health Insurance Portability and Accountability Act establishes the baseline for patient data protection in the United States. The Privacy Rule defines protected health information as any individually identifiable health information created or maintained by a covered entity. This includes demographic data, medical histories, test results, insurance information, and any other data that could reasonably identify a patient.
+
+Covered entities include healthcare providers who conduct electronic transactions, health plans, and healthcare clearinghouses. Business associates who handle PHI on behalf of covered entities are also bound by HIPAA requirements through Business Associate Agreements.
+
+The Security Rule requires administrative, physical, and technical safeguards for electronic PHI. Administrative safeguards include workforce training, access management policies, and security incident procedures. Physical safeguards address facility access controls, workstation security, and device disposal protocols. Technical safeguards mandate access controls, audit logging, integrity controls, and transmission security measures including encryption.
+
+Minimum Necessary Standard
+
+The minimum necessary standard requires that covered entities limit the use, disclosure, and request of PHI to the minimum amount needed to accomplish the intended purpose. This principle applies to internal access as well. A billing department employee should not have access to clinical notes unless such access is required for their job function.
+
+Role-based access control systems enforce the minimum necessary standard by granting permissions based on job responsibilities. Access logs must be maintained and reviewed regularly to detect unauthorized access attempts or patterns indicating potential insider threats.
+
+Breach Notification Requirements
+
+When a breach of unsecured PHI occurs, covered entities must notify affected individuals within 60 days of discovering the breach. If the breach affects 500 or more individuals, the entity must also notify the Department of Health and Human Services and prominent media outlets in the affected jurisdiction.
+
+A breach is defined as an impermissible use or disclosure that compromises the security or privacy of PHI. A risk assessment considering the nature of the data, the unauthorized person who accessed it, whether the data was actually acquired or viewed, and the extent of mitigation determines whether notification is required.
+
+Patient Rights Under HIPAA
+
+Patients have the right to access their own health records, request corrections to inaccurate information, receive an accounting of disclosures made by the covered entity, request restrictions on certain uses or disclosures, and receive communications through alternative means such as a specific phone number or mailing address. Organizations must establish clear procedures for processing these requests within the regulatory timeframes.
+
+International Considerations
+
+Healthcare organizations operating across borders must also consider international privacy frameworks. The European Union General Data Protection Regulation classifies health data as a special category requiring explicit consent for processing. Cross-border data transfers require adequate safeguards such as Standard Contractual Clauses or binding corporate rules.

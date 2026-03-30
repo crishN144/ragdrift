@@ -1,0 +1,35 @@
+Corporate Governance Best Practices
+
+Introduction
+
+Corporate governance encompasses the systems, principles, and processes by which companies are directed and controlled. Effective governance aligns the interests of management, shareholders, employees, and other stakeholders while ensuring accountability, transparency, and long-term value creation.
+
+Board Composition and Independence
+
+A well-functioning board of directors is the cornerstone of good governance. Best practices recommend that a majority of board members be independent directors, defined as individuals without material financial, family, or professional relationships with the company or its management. Independent directors bring objective judgment to board deliberations and are essential for effective oversight of management performance and compensation.
+
+Board diversity across dimensions including gender, ethnicity, professional background, and geographic experience correlates with improved decision-making and better financial performance. Many jurisdictions have adopted disclosure requirements or mandates for board diversity. Companies should establish a skills matrix that maps desired competencies to current board composition, identifying gaps that inform the director nomination process.
+
+Board size should be sufficient to staff committees and provide diverse perspectives without becoming unwieldy. Most governance experts recommend boards of 8 to 12 members. Staggered board terms, where a portion of directors stand for election each year, provide continuity while ensuring regular refreshment.
+
+Committee Structure
+
+Audit committees oversee financial reporting, internal controls, and the relationship with external auditors. All members should be independent, and at least one member should qualify as a financial expert. The committee should meet with the external auditor in executive session without management present at least quarterly.
+
+Compensation committees establish executive pay policies and make specific compensation decisions for senior officers. Independence requirements ensure that compensation decisions are free from management influence. The committee should engage independent compensation consultants and benchmark pay against appropriate peer groups.
+
+Nomination and governance committees identify and evaluate board candidates, manage the annual board evaluation process, and oversee governance policies including the code of conduct, conflict of interest procedures, and related-party transaction approvals.
+
+Executive Compensation
+
+Compensation design should align executive incentives with long-term shareholder value creation. Base salary provides a competitive fixed component, while short-term incentive plans tied to annual financial and operational metrics reward near-term performance. Long-term equity awards, including restricted stock units and performance shares with multi-year vesting periods, align management interests with shareholder returns over extended time horizons.
+
+Clawback policies allow the company to recover incentive compensation in the event of financial restatements or misconduct. Robust clawback provisions reinforce accountability and deter short-term risk-taking that could inflate near-term results at the expense of long-term sustainability.
+
+Shareholder Engagement
+
+Proactive engagement with shareholders between annual meetings builds trust and enables early identification of concerns. Companies should establish a shareholder engagement program that includes outreach to major institutional investors, responsiveness to shareholder proposals, and transparent communication of strategy, risk management practices, and governance improvements.
+
+Risk Oversight
+
+The board bears ultimate responsibility for risk oversight. While management identifies, assesses, and manages risks in day-to-day operations, the board must ensure that an enterprise risk management framework is in place and functioning effectively. Regular risk reporting to the board should cover strategic, operational, financial, compliance, and reputational risks with clear escalation criteria for emerging threats.
