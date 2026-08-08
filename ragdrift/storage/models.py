@@ -1,6 +1,13 @@
 import sqlite3
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
+
+try:
+    # pydantic (used by the MCP SDK for tool schemas) can only introspect
+    # TypedDicts on Python < 3.12 when they come from typing_extensions.
+    from typing_extensions import TypedDict
+except ImportError:  # core install without mcp/langsmith extras
+    from typing import TypedDict
 
 
 # State schemas
