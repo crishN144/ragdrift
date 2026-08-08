@@ -591,6 +591,10 @@ What appears in a trace:
 - LangGraph pipelines built with `build_scan_graph()` are traced natively (the
   env vars LangGraph reads are set for you).
 
+A diagnosis run with cost attribution in the LangSmith UI:
+
+![LangSmith trace of a ragdrift scan showing token usage and estimated cost metadata](./assets/langsmith_cost_trace.png)
+
 Without `LANGSMITH_API_KEY` — or without the `langsmith` package — every hook is
 a no-op and nothing is imported at module load.
 
@@ -606,6 +610,12 @@ summary = upload_golden_eval("./docs")
 # {'dataset_name': 'ragdrift-golden-docs', 'experiment_name': 'ragdrift-golden-...',
 #  'num_queries': 10, 'avg_score_accuracy': 0.88}
 ```
+
+The experiment on a drifted corpus — recall@5 stays a perfect 1.00 on every
+query while score-accuracy drops to 0.46–0.77 on exactly the drifted documents,
+which is the failure mode ragdrift exists to catch:
+
+![LangSmith experiment scoring golden queries: recall stays 1.00 while score-accuracy exposes drifted documents](./assets/langsmith_eval_experiment.png)
 
 ## Research
 
