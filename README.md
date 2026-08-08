@@ -1,7 +1,7 @@
 <img src="./assets/banner.svg" alt="ragdrift" width="100%" />
 
 [![CI](https://github.com/crishN144/ragdrift/actions/workflows/ci.yml/badge.svg)](https://github.com/crishN144/ragdrift/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/badge/pypi-v0.1.0-blue)](https://pypi.org/project/ragdrift/)
+[![PyPI](https://img.shields.io/pypi/v/ragdrift)](https://pypi.org/project/ragdrift/)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/ragdrift/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2601.14479-b31b1b.svg)](https://arxiv.org/abs/2601.14479)
@@ -39,6 +39,8 @@ Run with `--explain` for LLM-powered root-cause diagnosis and prevention tips:
 - [Architecture](#architecture)
 - [Fingerprinting: file vs. extractor drift](#fingerprinting-file-vs-extractor-drift)
 - [Optional extras](#optional-extras)
+- [Use ragdrift from Claude (MCP)](#use-ragdrift-from-claude-mcp)
+- [Tracing with LangSmith](#tracing-with-langsmith)
 - [Research](#research)
 - [When ragdrift is NOT the right tool](#when-ragdrift-is-not-the-right-tool)
 - [Tech stack](#tech-stack)
@@ -502,7 +504,107 @@ pip install ragdrift[explain]   # + Anthropic SDK (--explain flag)
 pip install ragdrift[api]       # + FastAPI server
 pip install ragdrift[ui]        # + Streamlit dashboard
 pip install ragdrift[agent]     # + LangGraph agentic pipeline
+pip install ragdrift[mcp]       # + MCP server (use ragdrift from Claude)
+pip install ragdrift[langsmith] # + LangSmith tracing (token usage + cost per run)
 pip install ragdrift[all]       # everything
+```
+
+## Use ragdrift from Claude (MCP)
+
+ragdrift ships an MCP server (stdio transport) so any MCP client — Claude Code,
+Claude Desktop — can run drift checks as agent tools:
+
+```bash
+pip install ragdrift[mcp]
+claude mcp add ragdrift -- ragdrift-mcp
+```
+
+Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ragdrift": {
+      "command": "ragdrift-mcp"
+    }
+  }
+}
+```
+
+Six tools are exposed, backed by the same code paths as the CLI:
+
+| Tool | Backed by | What it does |
+|------|-----------|--------------|
+| `snapshot_corpus` | `ragdrift init` | Take/reset the reference snapshot (+ optional golden queries) |
+| `run_drift_scan` | `ragdrift scan` | Full drift check vs the latest snapshot; logs to drift history |
+| `probe_golden_queries` | golden-query prober | Per-query score-accuracy + recall@5, reference vs current index |
+| `diagnose_drift` | `--explain` | LLM root-cause diagnosis of a stored scan's drifted docs (needs `ANTHROPIC_API_KEY`, or local Ollama) |
+| `list_recent_scans` | drift log | Scan history summaries, newest first |
+| `get_latest_report` | drift log | Full latest scan report incl. every drift event |
+
+`run_drift_scan` and `get_latest_report` return JSON matching ragdrift's
+`ScanResult`/`DriftEvent` models; the other tools return compact JSON summaries
+(snapshot metadata, per-query probe scores, scan-history rows). Tool failures
+(bad path, missing snapshot, missing API key) come back as MCP tool errors —
+the server never crashes. `snapshot_corpus` and `run_drift_scan` write
+to `<corpus>/.ragdrift/` exactly like the CLI does.
+
+Example session (Claude Code, abridged):
+
+```text
+> Snapshot ./docs with golden_queries.json, then check it for drift.
+
+⏺ ragdrift · snapshot_corpus(corpus_dir: "./docs", golden_queries_path: "./golden_queries.json")
+  ⎿ {"snapshot_id": "20260808T132105Z", "docs_snapshotted": 20, "golden_queries_saved": true}
+
+⏺ ragdrift · run_drift_scan(corpus_dir: "./docs")
+  ⎿ {"overall_severity": "critical", "docs_drifted": 5,
+     "retrieval_accuracy_before": 1.0, "retrieval_accuracy_after": 0.8813, ...}
+
+⏺ 5 of 20 documents drifted (severity: critical). Retrieval accuracy dropped
+  11.9pp. Worst offender: 16_cloud_architecture.md — chunk count 11 → 18.
+  Recommended action: re-ingest.
+```
+
+## Tracing with LangSmith
+
+Optional, env-gated, zero behavior change when off:
+
+```bash
+pip install ragdrift[langsmith]
+export LANGSMITH_API_KEY=lsv2_...
+# optional: export LANGSMITH_PROJECT=ragdrift   (default)
+ragdrift scan --corpus ./docs --explain
+```
+
+With the key set, `ragdrift` (CLI or MCP server) enables tracing automatically.
+What appears in a trace:
+
+- a `ragdrift.scan` chain run per scan (inputs + the resulting `ScanResult`)
+  and a `ragdrift.init` chain run per snapshot (inputs + the snapshot summary);
+- one `ragdrift.diagnosis` (CLI path) or `ragdrift.explainer` (agent-node path)
+  LLM run per `--explain` call, carrying **token usage and estimated cost** in
+  the run metadata: `input_tokens`, `output_tokens`, `total_tokens`,
+  `estimated_cost_usd`, `ls_provider`, `ls_model_name`. Costs come from the
+  price table in `ragdrift/observability/costs.py` (Ollama = $0; unknown models
+  report no cost rather than a guess);
+- LangGraph pipelines built with `build_scan_graph()` are traced natively (the
+  env vars LangGraph reads are set for you).
+
+Without `LANGSMITH_API_KEY` — or without the `langsmith` package — every hook is
+a no-op and nothing is imported at module load.
+
+### Upload a golden-query eval to LangSmith
+
+Opt-in helper — creates a dataset from your golden queries and runs one scored
+experiment (score-accuracy + recall@5 per query) visible in the LangSmith UI:
+
+```python
+from ragdrift.observability.langsmith_eval import upload_golden_eval
+
+summary = upload_golden_eval("./docs")
+# {'dataset_name': 'ragdrift-golden-docs', 'experiment_name': 'ragdrift-golden-...',
+#  'num_queries': 10, 'avg_score_accuracy': 0.88}
 ```
 
 ## Research
@@ -525,7 +627,7 @@ This is why ragdrift's `--explain` output goes beyond "chunk count changed". It 
 ## Tech stack
 
 **Core:** Python 3.11+ · SQLite · rank-bm25 · LangGraph
-**Optional:** Qdrant · sentence-transformers · FastAPI · Streamlit · Docker
+**Optional:** Qdrant · sentence-transformers · FastAPI · Streamlit · MCP SDK · LangSmith · Docker
 
 ---
 

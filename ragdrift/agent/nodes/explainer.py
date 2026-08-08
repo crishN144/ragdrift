@@ -7,6 +7,7 @@ Providers:
 import json
 
 from ragdrift.agent.state import ScanState
+from ragdrift.observability import llm_span
 
 
 def explainer_node(state: ScanState) -> dict:
@@ -53,14 +54,17 @@ Respond with ONLY a JSON object with exactly these three fields:
 
 
 def _call_anthropic(prompt: str) -> str | None:
+    model = "claude-haiku-4-5-20251001"
     try:
         import anthropic
         client = anthropic.Anthropic()
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=300,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        with llm_span("ragdrift.explainer", "anthropic", model, {"prompt": prompt}) as span:
+            msg = client.messages.create(
+                model=model,
+                max_tokens=300,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            span.record(msg.content[0].text, msg.usage.input_tokens, msg.usage.output_tokens)
         return msg.content[0].text
     except ImportError:
         return None
@@ -70,13 +74,21 @@ def _call_anthropic(prompt: str) -> str | None:
 
 def _call_ollama(prompt: str) -> str | None:
     import requests
+    model = "llama3.2"
     try:
-        r = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "llama3.2", "prompt": prompt, "stream": False},
-            timeout=30,
-        )
-        r.raise_for_status()
-        return r.json().get("response", "")
+        with llm_span("ragdrift.explainer", "ollama", model, {"prompt": prompt}) as span:
+            r = requests.post(
+                "http://localhost:11434/api/generate",
+                json={"model": model, "prompt": prompt, "stream": False},
+                timeout=30,
+            )
+            r.raise_for_status()
+            data = r.json()
+            span.record(
+                data.get("response", ""),
+                data.get("prompt_eval_count", 0),
+                data.get("eval_count", 0),
+            )
+        return data.get("response", "")
     except Exception:
         return None

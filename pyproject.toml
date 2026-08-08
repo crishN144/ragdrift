@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ragdrift"
-version = "0.1.0"
+version = "0.2.0"
 description = "Silent regression detector for RAG pipelines"
 readme = "README.md"
 license = "MIT"
@@ -47,8 +47,14 @@ explain = [
 agent = [
     "langgraph>=0.2.0",
 ]
+mcp = [
+    "mcp>=1.2.0",
+]
+langsmith = [
+    "langsmith>=0.1.100",
+]
 all = [
-    "ragdrift[vector,api,ui,explain,agent]",
+    "ragdrift[vector,api,ui,explain,agent,mcp,langsmith]",
 ]
 dev = [
     "pytest>=8.0.0",
@@ -57,6 +63,7 @@ dev = [
 
 [project.scripts]
 ragdrift = "ragdrift.cli:main"
+ragdrift-mcp = "ragdrift.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/crishN144/ragdrift"

@@ -25,6 +25,7 @@ from ragdrift.core.diff.structural import (
     diff_table_rows_in_chunks,
 )
 from ragdrift.core.extraction.router import extract
+from ragdrift.observability import configure_tracing, llm_span, maybe_traceable
 from ragdrift.storage.drift_log import DriftLog
 from ragdrift.storage.models import (
     DocumentSnapshot,
@@ -69,12 +70,22 @@ def _compute_token_stats(chunks: list[str]) -> tuple[float, float]:
     return round(avg, 2), round(std_dev, 2)
 
 
-def cmd_init(args: argparse.Namespace) -> None:
-    """Initialize a corpus: take a reference snapshot."""
-    corpus_dir = Path(args.corpus).resolve()
+@maybe_traceable(run_type="chain", name="ragdrift.init")
+def run_init(
+    corpus_dir: Path,
+    golden: str | None = None,
+    chunk_size: int = 512,
+    chunk_overlap: int = 50,
+    verbose: bool = False,
+) -> dict:
+    """Take a reference snapshot of a corpus.
+
+    Quiet core of `ragdrift init` — raises ValueError instead of exiting and
+    only writes to stdout when verbose (the MCP server uses stdout as its
+    protocol channel). Returns a summary dict.
+    """
     if not corpus_dir.is_dir():
-        print(f"Error: {corpus_dir} is not a directory", file=sys.stderr)
-        sys.exit(1)
+        raise ValueError(f"{corpus_dir} is not a directory")
 
     # Setup database
     db_dir = corpus_dir / ".ragdrift"
@@ -88,21 +99,18 @@ def cmd_init(args: argparse.Namespace) -> None:
     docs = _discover_docs(corpus_dir)
 
     if not docs:
-        print("Error: No documents found in corpus directory", file=sys.stderr)
-        sys.exit(1)
+        raise ValueError("No documents found in corpus directory")
 
-    chunker = RecursiveChunker(
-        chunk_size=args.chunk_size if hasattr(args, "chunk_size") else 512,
-        chunk_overlap=args.chunk_overlap if hasattr(args, "chunk_overlap") else 50,
-    )
+    chunker = RecursiveChunker(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     chunker_config = f"size={chunker.chunk_size},overlap={chunker.chunk_overlap}"
 
     doc_snapshots = []
     extractions = {}
 
     # Show a clean short path — strip long temp prefixes for readability
-    display_path = corpus_dir.name if "ragdrift_demo_" in str(corpus_dir) else str(corpus_dir)
-    print(f"  corpus: {display_path}  ({len(docs)} documents)")
+    if verbose:
+        display_path = corpus_dir.name if "ragdrift_demo_" in str(corpus_dir) else str(corpus_dir)
+        print(f"  corpus: {display_path}  ({len(docs)} documents)")
 
     for doc_path in docs:
         try:
@@ -132,31 +140,69 @@ def cmd_init(args: argparse.Namespace) -> None:
             "content": extraction["content"],
             "chunks": chunks,
         }
-        print(f"  ✓ {doc_path.name}: {len(chunks)} chunks, {len(extraction['headings'])} headings", flush=True)
-        time.sleep(0.08)
+        if verbose:
+            print(f"  ✓ {doc_path.name}: {len(chunks)} chunks, {len(extraction['headings'])} headings", flush=True)
+            time.sleep(0.08)
 
     snapshot_store.save_snapshot(corpus, snapshot_id, doc_snapshots, extractions)
     conn.close()
 
     # Copy golden queries if provided
-    if args.golden:
-        golden_path = Path(args.golden).resolve()
+    golden_saved = False
+    if golden:
+        golden_path = Path(golden).resolve()
         if golden_path.exists():
             dest = db_dir / "golden_queries.json"
             shutil.copy2(golden_path, dest)
-            print(f"  ✓ Golden queries saved ({dest})")
+            golden_saved = True
+            if verbose:
+                print(f"  ✓ Golden queries saved ({dest})")
 
-    print(f"\nSnapshot {snapshot_id} saved ({len(doc_snapshots)} documents)")
+    return {
+        "snapshot_id": snapshot_id,
+        "corpus_id": corpus,
+        "docs_snapshotted": len(doc_snapshots),
+        "documents": [s["doc_id"] for s in doc_snapshots],
+        "golden_queries_saved": golden_saved,
+    }
 
 
-def cmd_scan(args: argparse.Namespace) -> None:
-    """Scan corpus for drift against the latest snapshot."""
+def cmd_init(args: argparse.Namespace) -> None:
+    """Initialize a corpus: take a reference snapshot."""
     corpus_dir = Path(args.corpus).resolve()
+    try:
+        summary = run_init(
+            corpus_dir,
+            golden=args.golden,
+            chunk_size=args.chunk_size if hasattr(args, "chunk_size") else 512,
+            chunk_overlap=args.chunk_overlap if hasattr(args, "chunk_overlap") else 50,
+            verbose=True,
+        )
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\nSnapshot {summary['snapshot_id']} saved ({summary['docs_snapshotted']} documents)")
+
+
+@maybe_traceable(run_type="chain", name="ragdrift.scan")
+def run_scan(
+    corpus_dir: Path,
+    sample_rate: float = 0.2,
+    explain: bool = False,
+    provider: str = "anthropic",
+    verbose: bool = False,
+) -> ScanResult:
+    """Scan a corpus for drift against the latest snapshot.
+
+    Quiet core of `ragdrift scan` — raises ValueError instead of exiting and
+    only writes to stdout when verbose. Logs the scan to the drift log and
+    returns the ScanResult.
+    """
     db_path = _get_db_path(corpus_dir)
 
     if not db_path.exists():
-        print("Error: No snapshot found. Run 'ragdrift init' first.", file=sys.stderr)
-        sys.exit(1)
+        raise ValueError("No snapshot found. Run 'ragdrift init' first.")
 
     conn = init_db(db_path)
     snapshot_store = SnapshotStore(conn)
@@ -166,14 +212,13 @@ def cmd_scan(args: argparse.Namespace) -> None:
     latest_snapshot_id = snapshot_store.get_latest_snapshot(corpus)
 
     if not latest_snapshot_id:
-        print("Error: No snapshot found. Run 'ragdrift init' first.", file=sys.stderr)
-        sys.exit(1)
+        conn.close()
+        raise ValueError("No snapshot found. Run 'ragdrift init' first.")
 
     ref_docs = snapshot_store.get_snapshot_docs(corpus, latest_snapshot_id)
     ref_by_id = {d["doc_id"]: d for d in ref_docs}
 
     docs = _discover_docs(corpus_dir)
-    sample_rate = args.sample_rate if hasattr(args, "sample_rate") else 0.2
     sample_size = max(1, int(len(docs) * sample_rate))
 
     # Adaptive sampling: prioritize previously drifted docs
@@ -305,9 +350,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
     }
 
     # Optional LLM explanation
-    if args.explain if hasattr(args, "explain") else False:
-        provider = args.provider if hasattr(args, "provider") else "anthropic"
-
+    if explain:
         # Build ingestion fingerprints from reference snapshot
         fingerprints = {
             doc["doc_id"]: {
@@ -331,11 +374,12 @@ def cmd_scan(args: argparse.Namespace) -> None:
             "fingerprints": fingerprints,
             "drift_history": drift_history,
         }
-        print("\033[2J\033[H", end="", flush=True)
-        print(f"{C.MAUVE}  ┌─────────────────────────────────────────────────────────┐{C.RESET}")
-        print(f"{C.MAUVE}  │  LLM DIAGNOSIS  ·  Claude Haiku                         │{C.RESET}")
-        print(f"{C.MAUVE}  └─────────────────────────────────────────────────────────┘{C.RESET}")
-        print(f"\n  {C.DIM}calling {provider} for root cause analysis…{C.RESET}", flush=True)
+        if verbose:
+            print("\033[2J\033[H", end="", flush=True)
+            print(f"{C.MAUVE}  ┌─────────────────────────────────────────────────────────┐{C.RESET}")
+            print(f"{C.MAUVE}  │  LLM DIAGNOSIS  ·  Claude Haiku                         │{C.RESET}")
+            print(f"{C.MAUVE}  └─────────────────────────────────────────────────────────┘{C.RESET}")
+            print(f"\n  {C.DIM}calling {provider} for root cause analysis…{C.RESET}", flush=True)
         diagnosis = _explain_drift(scan_result, provider, extra_context)
         scan_result["diagnosis"] = diagnosis
 
@@ -343,7 +387,24 @@ def cmd_scan(args: argparse.Namespace) -> None:
     drift_log.log_scan(scan_result)
     conn.close()
 
-    # Output
+    return scan_result
+
+
+def cmd_scan(args: argparse.Namespace) -> None:
+    """Scan corpus for drift against the latest snapshot."""
+    corpus_dir = Path(args.corpus).resolve()
+    try:
+        scan_result = run_scan(
+            corpus_dir,
+            sample_rate=args.sample_rate if hasattr(args, "sample_rate") else 0.2,
+            explain=args.explain if hasattr(args, "explain") else False,
+            provider=args.provider if hasattr(args, "provider") else "anthropic",
+            verbose=True,
+        )
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     fmt = args.format if hasattr(args, "format") else "json"
     _output_scan(scan_result, fmt)
 
@@ -699,15 +760,22 @@ Include only drifted documents (severity != none). Sort documents array by risk_
 
 def _explain_anthropic(prompt: str) -> str | None:
     """Get explanation from Anthropic Claude."""
+    model = "claude-haiku-4-5-20251001"
     try:
         import anthropic
 
         client = anthropic.Anthropic()
-        response = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=3000,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        with llm_span("ragdrift.diagnosis", "anthropic", model, {"prompt": prompt}) as span:
+            response = client.messages.create(
+                model=model,
+                max_tokens=3000,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            span.record(
+                response.content[0].text,
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+            )
         return response.content[0].text
     except ImportError:
         print("Warning: anthropic SDK not installed. Install with: pip install ragdrift[explain]", file=sys.stderr)
@@ -721,18 +789,26 @@ def _explain_ollama(prompt: str) -> str | None:
     """Get explanation from local Ollama instance."""
     import requests
 
+    model = "llama3.2"
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={
-                "model": "llama3.2",
-                "prompt": prompt,
-                "stream": False,
-            },
-            timeout=120,
-        )
-        response.raise_for_status()
-        return response.json().get("response", "")
+        with llm_span("ragdrift.diagnosis", "ollama", model, {"prompt": prompt}) as span:
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                },
+                timeout=120,
+            )
+            response.raise_for_status()
+            data = response.json()
+            span.record(
+                data.get("response", ""),
+                data.get("prompt_eval_count", 0),
+                data.get("eval_count", 0),
+            )
+        return data.get("response", "")
     except Exception as e:
         print(f"Warning: Ollama explanation failed: {e}", file=sys.stderr)
         return None
@@ -1010,6 +1086,7 @@ def _print_scan_markdown(scan: dict) -> None:
 
 def main() -> None:
     """Main CLI entry point."""
+    configure_tracing()  # no-op unless ragdrift[langsmith] + LANGSMITH_API_KEY
     parser = argparse.ArgumentParser(
         prog="ragdrift",
         description="Silent regression detector for RAG pipelines",
