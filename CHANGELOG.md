@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.1 — 2026-09-06
+
+### Fixed
+
+- **MCP tool failures carry their reason again.** From `mcp` 2.1.0 the SDK
+  replaces any exception that is not a `ToolError` with a bare
+  `Error executing tool <name>`, stripping the message. ragdrift raised
+  `ValueError` for every caller-actionable failure (corpus path is not a
+  directory, no snapshot yet, no golden queries, LLM diagnosis failed), so
+  agents on `mcp >= 2.1.0` were told only that the tool failed. Tool failures
+  now raise `ToolError`, and `ValueError`s from the core (which has no `mcp`
+  dependency) are translated at the protocol boundary. Restores the behavior
+  documented in 0.2.0 on both `mcp` 1.x and 2.x.
+
 ## 0.2.0 — 2026-08-08
 
 ### Added

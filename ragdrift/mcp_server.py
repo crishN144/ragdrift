@@ -13,6 +13,8 @@ Register in Claude Code:  claude mcp add ragdrift -- ragdrift-mcp
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +28,14 @@ except ImportError:  # pragma: no cover
             "The mcp package is required for the ragdrift MCP server. "
             "Install with: pip install ragdrift[mcp]"
         ) from e
+
+# Tool failures must be raised as ToolError. Since mcp 2.1 any other exception
+# reaches the caller as a bare "Error executing tool <name>" with the reason
+# stripped, which hides the thing the agent needs to act on.
+try:
+    from mcp.server.mcpserver.exceptions import ToolError  # mcp >= 2.0
+except ImportError:  # pragma: no cover
+    from mcp.server.fastmcp.exceptions import ToolError  # mcp 1.x
 
 from ragdrift.cli import (
     _corpus_id,
@@ -52,17 +62,31 @@ mcp = MCPServer(
 )
 
 
+@contextmanager
+def _core_errors_as_tool_errors() -> Iterator[None]:
+    """Re-raise core validation failures as ToolError.
+
+    ragdrift's core raises ValueError for conditions the caller can act on (no
+    snapshot yet, empty corpus). The core has no mcp dependency, so the
+    translation happens here at the protocol boundary.
+    """
+    try:
+        yield
+    except ValueError as e:
+        raise ToolError(str(e)) from e
+
+
 def _resolve_corpus(corpus_dir: str) -> Path:
     path = Path(corpus_dir).expanduser().resolve()
     if not path.is_dir():
-        raise ValueError(f"corpus_dir is not a directory: {path}")
+        raise ToolError(f"corpus_dir is not a directory: {path}")
     return path
 
 
 def _open_drift_log(path: Path):
     db_path = _get_db_path(path)
     if not db_path.exists():
-        raise ValueError(
+        raise ToolError(
             f"No ragdrift database for {path}. Run the snapshot_corpus tool "
             "(or `ragdrift init`) first."
         )
@@ -90,13 +114,14 @@ def snapshot_corpus(
         chunk_overlap: Chunker overlap in characters (default 50).
     """
     path = _resolve_corpus(corpus_dir)
-    return run_init(
-        path,
-        golden=golden_queries_path,
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        verbose=False,
-    )
+    with _core_errors_as_tool_errors():
+        return run_init(
+            path,
+            golden=golden_queries_path,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            verbose=False,
+        )
 
 
 @mcp.tool()
@@ -122,13 +147,14 @@ def run_drift_scan(
         provider: LLM provider for explain — "anthropic" or "ollama".
     """
     path = _resolve_corpus(corpus_dir)
-    return run_scan(
-        path,
-        sample_rate=sample_rate,
-        explain=explain,
-        provider=provider,
-        verbose=False,
-    )
+    with _core_errors_as_tool_errors():
+        return run_scan(
+            path,
+            sample_rate=sample_rate,
+            explain=explain,
+            provider=provider,
+            verbose=False,
+        )
 
 
 @mcp.tool()
@@ -145,7 +171,7 @@ def probe_golden_queries(corpus_dir: str) -> dict[str, Any]:
     path = _resolve_corpus(corpus_dir)
     golden_path = path / ".ragdrift" / "golden_queries.json"
     if not golden_path.exists():
-        raise ValueError(
+        raise ToolError(
             f"No golden queries at {golden_path}. Snapshot with golden_queries_path first."
         )
 
@@ -155,12 +181,13 @@ def probe_golden_queries(corpus_dir: str) -> dict[str, Any]:
         corpus = _corpus_id(path)
         snapshot_id = store.get_latest_snapshot(corpus)
         if not snapshot_id:
-            raise ValueError("No snapshot found. Run the snapshot_corpus tool first.")
+            raise ToolError("No snapshot found. Run the snapshot_corpus tool first.")
         ref_docs = store.get_snapshot_docs(corpus, snapshot_id)
     finally:
         conn.close()
 
-    before, after, per_query = _run_probes(path, ref_docs, [], RecursiveChunker(), golden_path)
+    with _core_errors_as_tool_errors():
+        before, after, per_query = _run_probes(path, ref_docs, [], RecursiveChunker(), golden_path)
     return {
         "snapshot_id": snapshot_id,
         "retrieval_accuracy_before": before,
@@ -196,11 +223,11 @@ def diagnose_drift(
         if scan_id:
             scan = drift_log.get_scan(scan_id)
             if not scan:
-                raise ValueError(f"No scan with id {scan_id!r} for this corpus.")
+                raise ToolError(f"No scan with id {scan_id!r} for this corpus.")
         else:
             history = drift_log.get_corpus_history(_corpus_id(path))
             if not history:
-                raise ValueError("No scans recorded yet. Run the run_drift_scan tool first.")
+                raise ToolError("No scans recorded yet. Run the run_drift_scan tool first.")
             scan = history[0]
     finally:
         conn.close()
@@ -210,9 +237,10 @@ def diagnose_drift(
         return {"scan_id": scan["scan_id"], "diagnosis": None,
                 "note": "No drifted documents in this scan — nothing to diagnose."}
 
-    raw = _explain_drift(scan, provider, extra_context={})
+    with _core_errors_as_tool_errors():
+        raw = _explain_drift(scan, provider, extra_context={})
     if raw is None:
-        raise ValueError(
+        raise ToolError(
             f"LLM diagnosis failed via provider {provider!r} — check credentials "
             "(ANTHROPIC_API_KEY) or that Ollama is running."
         )
@@ -277,7 +305,7 @@ def get_latest_report(corpus_dir: str) -> ScanResult:
     finally:
         conn.close()
     if not history:
-        raise ValueError("No scans recorded yet. Run the run_drift_scan tool first.")
+        raise ToolError("No scans recorded yet. Run the run_drift_scan tool first.")
     return history[0]
 
 
